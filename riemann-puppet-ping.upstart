@@ -1,6 +1,6 @@
-# riemann-mysql
-description "mysql replication health check"
+# riemann-puppet-ping
+description "riemann puppet icmp health check"
 start on runlevel [235]
 stop on runlevel [016]
 respawn
-exec riemann-mysql
+exec riemann-puppet-ping
