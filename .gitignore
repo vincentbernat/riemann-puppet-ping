@@ -1,0 +1,7 @@
+*.o
+riemann-puppet-ping
+riemann.pb-c.c
+riemann.pb-c.h
+*~
+*.deb
+*core
