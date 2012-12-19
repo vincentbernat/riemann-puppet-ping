@@ -44,6 +44,7 @@ The following configuration directives are valid:
 * `reports_dir`: puppet report directory
 * `riemann_host`: host the riemann instance lives on
 * `riemann_port`: tcp port the riemann instance lives on
+* `shortnames`: truncate hostnames at the first dot
 
 ## Running
 
