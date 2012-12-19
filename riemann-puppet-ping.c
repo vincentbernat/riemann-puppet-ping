@@ -36,7 +36,7 @@
 #define PROGNAME		"riemann-puppet-ping"
 #define DEFAULT_INTERVAL	30
 #define DEFAULT_DELAY		2.0
-#define DEFAULT_CONFIG		"/etc/riemann/riemann-puppet-ping.conf"
+#define DEFAULT_CONFIG		"/etc/riemann-puppet-ping.conf"
 #define DEFAULT_RIEMANN_HOST	"localhost"
 #define DEFAULT_RIEMANN_PORT	5555
 #define DEFAULT_REPORTS_DIR	"/var/lib/puppet/reports"
