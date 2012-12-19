@@ -67,6 +67,7 @@ struct msg {
 };
 
 struct env {
+#define F_SHORT	 0x01
 	int	 flags;
 	int	 s;                        /* riemann connection */
 	int	 interval;                 /* ping interval */
@@ -184,6 +185,8 @@ puppet_ping(struct env *env, struct msg *m)
 			event__init(ev);
 			if ((ev->host = strdup(dent->d_name)) == NULL)
 				err(1, "stdup for hostname");
+			if (env->flags & F_SHORT)
+				ev->host[strcspn(ev->host, ".")] = '\0';
 			ping_schedule(ping, dent->d_name, ev);
 			msg.n_events++;
 		}
@@ -379,10 +382,15 @@ main(int argc, char *argv[])
 		if ((confline[0] == '#') || (confline[0] == '\n'))
 			continue;
 		key = confline + strspn(confline, " \t");
-		val = confline + strcspn(confline, "=") + 1;
-		key[strcspn(key, " \t=")] = '\0';
-		val += strspn(val, " \t");
-		val[strcspn(val, "\n")] = '\0';
+		val = confline + strcspn(confline, "\n=");
+		if (*val == '\n') {
+			*val = '\0';
+		} else {
+			val++;
+			key[strcspn(key, " \t=")] = '\0';
+			val += strspn(val, " \t");
+			val[strcspn(val, "\n")] = '\0';
+		}
 
 		log_debug("configuration parsed key = %s, val = %s", key, val);
 
@@ -401,6 +409,8 @@ main(int argc, char *argv[])
 			env.delay = atof(val);
 		} else if (strcasecmp(key, "reports_dir") == 0) {
 			strncpy(env.reports_dir, val, strlen(val) + 1);
+		} else if (strcasecmp(key, "shortnames") == 0) {
+			env.flags |= F_SHORT;
 		} else if (strcasecmp(key, "tag") == 0) {
 			if (env.tagcount >= MAXTAGS)
 				errx(1, "too many tags");
