@@ -101,7 +101,6 @@ void	 fatalx(const char *);
 struct ping_res *
 ping_first(struct ping *ping)
 {
-	log_debug("ping_first: %p", ping->head);
 	return ping->head;
 }
 
@@ -379,10 +378,8 @@ ping_recv(int s, short event, void *arg)
 		err(1, "gettimeofday");
 
 	timersub(&tv, &ping->start, &tv);
-	log_debug("got latency: %ld.%ld", tv.tv_sec, tv.tv_usec);
 	res->latency = ((tv.tv_sec & 0xffffffff) * 1000000000.0 
 			+ (tv.tv_usec & 0xffffffff)) * 0.001;
-	log_debug("translated latency: %g", res->latency);
 	
 	if (ping_all_done(ping))
 		return;
@@ -413,9 +410,6 @@ ping_next_timeout(struct timeval *start, struct timeval *timeout,
 	bzero(&tv_zero, sizeof(tv_zero));
 	if (timercmp(&tv_zero, new_timeout, >))
 		bcopy(&tv_zero, new_timeout, sizeof(*new_timeout));
-
-	log_debug("computed new timeout: %ld.%ld", new_timeout->tv_sec,
-		  new_timeout->tv_usec);
 }
 
 /* in_cksum from ping.c --

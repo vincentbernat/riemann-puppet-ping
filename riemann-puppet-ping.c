@@ -109,7 +109,6 @@ void     puppet_ping_event(struct env *, struct ping_res *);
 void	 riemann_send(struct env *, struct msg *);
 void	 event_free(void *);
 
-
 void
 event_free(void *p)
 {
@@ -131,7 +130,6 @@ puppet_ping_event(struct env *env, struct ping_res *res)
 	ev = ping_data(res);
 	flags = ping_info(res, &latency);
 
-	log_debug("in puppet_ping_event");
 	ev->has_time = 1;
 	ev->time = time(NULL);
 	ev->service = "ping";
@@ -218,17 +216,12 @@ puppet_ping(struct env *env, struct msg *m)
 		errx(1, "inconsistent data structures in reply");
 
 	m->len = msg__get_packed_size(&msg);
-	log_debug("packed msg size: %d", m->len);
 	m->buf = calloc(1, m->len);
 	msg__pack(&msg, m->buf);
 
-	log_debug("message has been packed");
-
  out:
-	log_debug("freeing ping session");
 	if (ping)
-		ping_free(ping, free);
-	log_debug("freeing events");
+		ping_free(ping, event_free);
 	if (msg.n_events) /* individual events are freed by ping_free */
 		free(msg.events);
 	return;
