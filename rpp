@@ -56,7 +56,6 @@ class RiemannPuppetPing
   end
 
   def ping_success host
-    puts "#{host} is alive"
     riemann_send(host.split(".").first(), true, "ping OK")
   end
 
