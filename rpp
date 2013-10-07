@@ -1,0 +1,95 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'icmp4em'
+require 'eventmachine'
+require 'riemann/client'
+
+class RiemannPuppetPing
+
+  def initialize
+    path = ARGV[0] || ENV["RPP_CONFIG"] || "/etc/riemann-puppet-ping.conf"
+ 
+    @reports_dir = "/var/lib/puppet/reports"
+    @retries = 3
+    @timeout = 2
+    @tags = []
+    @ttl = 60
+    @host = "localhost"
+    @port = 5555
+    @interval = 30
+
+    File.open path do |f|
+      f.each_line.map{|l| l.chomp.sub(/#.*$/,"").strip}.each do |l|
+        next if (l =~ /^$/)
+
+        (directive, val) = l.split("=", 2).map{|x| x.strip.downcase}
+
+        case directive.to_sym
+        when :reports_dir
+          @reports_dir = val
+        when :retries
+          @retries = val.to_i
+        when :timeout
+          @timeout = val.to_i
+        when :tags
+          @tags << val
+        when :riemann_host
+          @host = val
+        when :riemann_port
+          @port = val
+        end
+      end
+    end
+
+    @client = Riemann::Client.new :host => @host, :port => @port
+  end
+
+  def riemann_send host, success, description
+    @client << {:service => "ping",
+                :metric => success ? 1 : 0,
+                :state => success ? "ok" : "critical",
+                :ttl => @ttl,
+		:tags => @tags,
+		:host => host,
+		:description => description}
+  end
+
+  def ping_success host
+    puts "#{host} is alive"
+    riemann_send(host.split(".").first(), true, "ping OK")
+  end
+
+  def ping_failure host, e
+    riemann_send(host.split(".").first(), true, "ping failure: #{e}")
+  end
+
+  def dir_list()
+    Dir.chdir(@reports_dir) do 
+      Dir.entries(".").reject do |x|
+        x == "." or x == ".." or not File.directory? x
+      end
+    end
+  end
+
+  def ping_everyone(hostlist)
+    manager = ICMP4EM::Manager.new :retries => @retries, :timeout => @timeout
+    hostlist.each do |host|
+      request = manager.ping host
+      request.callback { ping_success host }
+      request.errback { |e| ping_failure host, e }
+    end
+  end
+
+  def serve_forever
+    EM.run do
+      ping_everyone(dir_list)
+      EM.add_periodic_timer(@interval) do
+        ping_everyone(dir_list)
+      end
+    end
+  end
+end
+
+rpp = RiemannPuppetPing.new
+rpp.serve_forever

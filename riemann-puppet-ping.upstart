@@ -3,4 +3,4 @@ description "riemann puppet icmp health check"
 start on runlevel [235]
 stop on runlevel [016]
 respawn
-exec riemann-puppet-ping
+exec rpp
