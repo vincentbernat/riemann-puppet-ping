@@ -8,7 +8,7 @@ require 'riemann/client'
 class RiemannPuppetPing
 
   def initialize
-    path = ARGV[0] || ENV["RPP_CONFIG"] || "/etc/riemann-puppet-ping.conf"
+    path = ARGV[0] || ENV["RPP_CONFIG"] || "/etc/rpp.conf"
  
     @reports_dir = "/var/lib/puppet/reports"
     @retries = 3
