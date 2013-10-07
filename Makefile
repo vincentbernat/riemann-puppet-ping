@@ -1,7 +1,7 @@
 PROG=rpp
 RM=rm -f
 FPMTYPE=deb
-VERSION?=0.7.1
+VERSION?=0.7.2
 INSTALL=install
 
 all: $(PROG)
