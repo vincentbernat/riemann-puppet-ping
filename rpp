@@ -60,7 +60,7 @@ class RiemannPuppetPing
   end
 
   def ping_failure host, e
-    riemann_send(host.split(".").first(), true, "ping failure: #{e}")
+    riemann_send(host.split(".").first(), false, "ping failure: #{e}")
   end
 
   def dir_list()
