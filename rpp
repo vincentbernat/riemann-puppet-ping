@@ -74,9 +74,13 @@ class RiemannPuppetPing
   def ping_everyone(hostlist)
     manager = ICMP4EM::Manager.new :retries => @retries, :timeout => @timeout
     hostlist.each do |host|
-      request = manager.ping host
-      request.callback { ping_success host }
-      request.errback { |e| ping_failure host, e }
+      begin
+        request = manager.ping host
+        request.callback { ping_success host }
+        request.errback { |e| ping_failure host, e }
+      rescue
+        puts "could not add host: #{host}"
+      end
     end
   end
 
