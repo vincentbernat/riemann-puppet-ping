@@ -4,6 +4,7 @@ require 'rubygems'
 require 'icmp4em'
 require 'eventmachine'
 require 'riemann/client'
+require 'socket'
 
 class RiemannPuppetPing
 
@@ -71,9 +72,19 @@ class RiemannPuppetPing
     end
   end
 
+  def pingable? host
+    begin
+      Socket.getaddrinfo(host, nil)
+      true
+    rescue
+      false
+    end
+  end
+
   def ping_everyone(hostlist)
     manager = ICMP4EM::Manager.new :retries => @retries, :timeout => @timeout
     hostlist.each do |host|
+      next unless pingable? host
       begin
         request = manager.ping host
         request.callback { ping_success host }
