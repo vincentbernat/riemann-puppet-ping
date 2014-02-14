@@ -10,8 +10,8 @@ class RiemannPuppetPing
 
   def initialize
     path = ARGV[0] || ENV["RPP_CONFIG"] || "/etc/rpp.conf"
- 
-    @reports_dir = "/var/lib/puppet/reports"
+
+    @reports_dir = []
     @retries = 3
     @timeout = 2
     @tags = []
@@ -28,7 +28,8 @@ class RiemannPuppetPing
 
         case directive.to_sym
         when :reports_dir
-          @reports_dir = val
+          (reports_dir,tag) = val.split(/:/)
+          @reports_dir << {:dir => reports_dir, :tag => tag}
         when :retries
           @retries = val.to_i
         when :timeout
@@ -46,30 +47,36 @@ class RiemannPuppetPing
     @client = Riemann::Client.new :host => @host, :port => @port
   end
 
-  def riemann_send host, success, description
+  def riemann_send host, success, description, tag=nil
+    tags = @tags
+    tags = @tags + [tag] if tag
     @client << {:service => "ping",
                 :metric => success ? 1 : 0,
                 :state => success ? "ok" : "critical",
                 :ttl => @ttl,
-		:tags => @tags,
+		:tags => tags,
 		:host => host,
 		:description => description}
   end
 
-  def ping_success host
-    riemann_send(host.split(".").first(), true, "ping OK")
+  def ping_success entry
+    riemann_send(entry[:host].split(".").first(), true, "ping OK", entry[:tag])
   end
 
-  def ping_failure host, e
-    riemann_send(host.split(".").first(), false, "ping failure: #{e}")
+  def ping_failure entry, e
+    riemann_send(entry[:host].split(".").first(), false, "ping failure: #{e}", entry[:tag])
   end
 
   def dir_list()
-    Dir.chdir(@reports_dir) do 
-      Dir.entries(".").reject do |x|
-        x == "." or x == ".." or not File.directory? x
+    files = @reports_dir.map do |entry|
+      Dir.chdir(entry[:dir]) do
+        entries = Dir.entries(".").reject do |x|
+          x == "." or x == ".." or not File.directory? x
+        end
+        entries.map{ |x| {:host => x, :tag => entry[:tag]}}
       end
     end
+    files.flatten
   end
 
   def pingable? host
@@ -81,14 +88,14 @@ class RiemannPuppetPing
     end
   end
 
-  def ping_everyone(hostlist)
+  def ping_everyone(entries)
     manager = ICMP4EM::Manager.new :retries => @retries, :timeout => @timeout
-    hostlist.each do |host|
-      next unless pingable? host
+    entries.each do |entry|
+      next unless pingable? entry[:host]
       begin
-        request = manager.ping host
-        request.callback { ping_success host }
-        request.errback { |e| ping_failure host, e }
+        request = manager.ping entry[:host]
+        request.callback { ping_success entry }
+        request.errback { |e| ping_failure entry, e }
       rescue
         puts "could not add host: #{host}"
       end
