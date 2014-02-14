@@ -1,7 +1,7 @@
 PROG=rpp
 RM=rm -f
 FPMTYPE=deb
-VERSION?=0.7.3
+VERSION?=0.7.4
 INSTALL=install
 
 all: $(PROG)
@@ -9,7 +9,7 @@ all: $(PROG)
 version:
 	@echo $(VERSION)
 
-package: 
+package:
 	mkdir -p /tmp/fpm-pkg-rpp/usr/bin
 	mkdir -p /tmp/fpm-pkg-rpp/etc/init
 	make install DESTDIR=/tmp/fpm-pkg-rpp
