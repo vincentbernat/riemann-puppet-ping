@@ -88,8 +88,7 @@ class RiemannPuppetPing
     end
   end
 
-  def ping_everyone(entries)
-    manager = ICMP4EM::Manager.new :retries => @retries, :timeout => @timeout
+  def ping_everyone(entries, manager)
     entries.each do |entry|
       next unless pingable? entry[:host]
       begin
@@ -104,9 +103,10 @@ class RiemannPuppetPing
 
   def serve_forever
     EM.run do
-      ping_everyone(dir_list)
+      manager = ICMP4EM::Manager.new :retries => @retries, :timeout => @timeout
+      ping_everyone(dir_list, manager)
       EM.add_periodic_timer(@interval) do
-        ping_everyone(dir_list)
+        ping_everyone(dir_list, manager)
       end
     end
   end
